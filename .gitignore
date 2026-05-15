@@ -1,0 +1,16 @@
+# Compilacion
+build/
+*.exe
+*.o
+*.obj
+*.a
+*.lib
+
+# IDE
+.vscode/
+.idea/
+*.user
+
+# Windows
+Thumbs.db
+Desktop.ini
