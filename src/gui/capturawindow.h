@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QString> 
 #include "../capture/capture.h"
 
 QT_BEGIN_NAMESPACE
@@ -28,6 +29,8 @@ private:
     Capture* captura;
     QTimer* timer;
 
+    //filtros
+    void aplicarFiltro(const QString& protocoloFiltro);
 
     int ultimoPaqueteMostrado;
     void mostrarHex(const PacketInfo& pkt);
