@@ -1,6 +1,6 @@
 #include "capturawindow.h"
 #include "ui_capturawindow.h"
-
+#include "../filters/filter_engine.h"
 capturawindow::capturawindow(Capture* cap,
                              QWidget *parent)
     : QMainWindow(parent)
@@ -23,6 +23,48 @@ capturawindow::capturawindow(Capture* cap,
             &QPushButton::clicked,
             this,
             &capturawindow::on_btn_Reiniciar_clicked);
+
+    //botones para filtrar paquetes
+    connect(ui->btnTCP,
+            &QPushButton::clicked,
+            this,
+            [this](){aplicarFiltro("TCP");});
+
+    connect(ui->btnUDP,
+            &QPushButton::clicked,
+            this,
+            [this](){aplicarFiltro("UDP");});
+
+    connect(ui->btnICMP,
+            &QPushButton::clicked,
+            this,
+            [this](){aplicarFiltro("ICMP");});
+
+    connect(ui->btnARP, 
+            &QPushButton::clicked, 
+            this, 
+            [this](){aplicarFiltro("ARP");});
+
+    connect(ui->btnHTTP, 
+            &QPushButton::clicked, 
+            this, 
+            [this](){aplicarFiltro("HTTP");});
+
+    connect(ui->btnHTTPS,
+            &QPushButton::clicked, 
+            this, 
+            [this](){aplicarFiltro("HTTPS");});
+
+    connect(ui->btnDNS, 
+            &QPushButton::clicked, 
+            this, 
+            [this](){aplicarFiltro("DNS");});        
+
+    connect(ui->btnTodos,
+            &QPushButton::clicked,
+            this,
+            [this](){aplicarFiltro("");});
+
     // Configurar tabla
     ui->tablePaquetes->setColumnCount(6);
 
@@ -65,6 +107,60 @@ capturawindow::capturawindow(Capture* cap,
 capturawindow::~capturawindow()
 {
     delete ui;
+}
+
+//función para aplicar filtro a la tabla de paquetes
+void capturawindow::aplicarFiltro(const QString& protocoloFiltro){
+    //detener el timer para evitar actualizaciones mientras se aplica el filtro
+    timer->stop();
+
+    //limpar la tabla de paquetes
+    ui->tablePaquetes->setRowCount(0);
+
+    std::string filtroStd = protocoloFiltro.toStdString();
+    auto paquetes = captura->obtenerPaquetes()->obtener_todos();
+    int filaVisual = 0;
+
+    for(size_t i = 0; i < paquetes.size(); i++){
+        bool cumpleFiltro = false;
+
+        // Lógica para saber qué estamos buscando
+        if(protocoloFiltro.isEmpty()) {
+            cumpleFiltro = true; // Botón "Todos"
+        } 
+        else if (filtroStd == "HTTP") {
+            cumpleFiltro = (paquetes[i].puerto_org == 80 || paquetes[i].puerto_dst == 80);
+        } 
+        else if (filtroStd == "HTTPS") {
+            cumpleFiltro = (paquetes[i].puerto_org == 443 || paquetes[i].puerto_dst == 443);
+        } 
+        else if (filtroStd == "DNS") {
+            cumpleFiltro = (paquetes[i].puerto_org == 53 || paquetes[i].puerto_dst == 53);
+        } 
+        else {
+            // TCP, UDP, ICMP y ARP
+            cumpleFiltro = (paquetes[i].protocolo == filtroStd);
+        }
+
+        // Si pasa el filtro, lo agregamos a la tabla
+        if(cumpleFiltro){
+            ui->tablePaquetes->insertRow(filaVisual);
+            ui->tablePaquetes->setItem(filaVisual, 0, new QTableWidgetItem(QString::number(paquetes[i].numero)));
+            ui->tablePaquetes->setItem(filaVisual, 1, new QTableWidgetItem(QString::fromStdString(paquetes[i].tiempo)));
+            ui->tablePaquetes->setItem(filaVisual, 2, new QTableWidgetItem(QString::fromStdString(paquetes[i].ip_org)));
+            ui->tablePaquetes->setItem(filaVisual, 3, new QTableWidgetItem(QString::fromStdString(paquetes[i].ip_dst)));
+            ui->tablePaquetes->setItem(filaVisual, 4, new QTableWidgetItem(QString::fromStdString(paquetes[i].protocolo)));
+            ui->tablePaquetes->setItem(filaVisual, 5, new QTableWidgetItem(QString::number(paquetes[i].longitud)));
+            
+            filaVisual++;
+        }
+    }
+
+    //si se selecciona quitar el filtro, se reactiva la captura
+    if(protocoloFiltro.isEmpty()){
+        ultimoPaqueteMostrado = paquetes.size(); //sincronizar el contador de paquetes
+        timer->start(50);
+    }
 }
 
 void capturawindow::actualizarTabla()
@@ -121,14 +217,29 @@ void capturawindow::mostrarDetalles()
 
     if(fila < 0)
         return;
+    
+    // Obtener el número de paquete mostrado en la fila seleccionada
+    int idPaqueteReal = ui->tablePaquetes->item(fila, 0)->text().toInt();
 
     auto paquetes =
         captura->obtenerPaquetes()->obtener_todos();
 
+    //buscar el paquete correcto por su número
+    PacketInfo pkt;
+    bool encontrado = false;
+    for(const auto& p : paquetes){
+        if(p.numero == idPaqueteReal){
+            pkt = p;
+            encontrado = true;
+            break;
+        }
+    }
+    if(!encontrado) return;
+
+    ui->treeDetalles->clear();
+
     if(fila >= paquetes.size())
         return;
-
-    const PacketInfo& pkt = paquetes[fila];
 
     ui->treeDetalles->clear();
 
@@ -200,6 +311,7 @@ void capturawindow::mostrarDetalles()
     //ui->treeDetalles->expandAll();
     mostrarHex(pkt);
 }
+
 void capturawindow::mostrarHex(const PacketInfo& pkt)
 {
     QString salida;
@@ -243,6 +355,7 @@ void capturawindow::mostrarHex(const PacketInfo& pkt)
 
     ui->txtHex->setPlainText(salida);
 }
+
 void capturawindow::on_btn_Detener_clicked()
 {
     if(captura)
@@ -250,13 +363,16 @@ void capturawindow::on_btn_Detener_clicked()
 
     timer->stop();
 }
+
 void capturawindow::on_btn_Reanudar_clicked()
 {
     if(captura)
         captura->reanudar();
 
-    timer->start(50);
+    //al reanudar, nos aseguramos de quitar cualquier filtro para que fluya todo
+    aplicarFiltro("");
 }
+
 void capturawindow::on_btn_Reiniciar_clicked()
 {
     if(captura)
@@ -265,5 +381,6 @@ void capturawindow::on_btn_Reiniciar_clicked()
         ultimoPaqueteMostrado = 0;
         ui->tablePaquetes->clearContents();
         captura->reiniciar();
+        aplicarFiltro(""); //limpia los filtros al reiniciar
     }
 }
