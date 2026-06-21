@@ -1,6 +1,7 @@
 #include "capturawindow.h"
 #include "ui_capturawindow.h"
 #include "../filters/filter_engine.h"
+
 capturawindow::capturawindow(Capture* cap,
                              QWidget *parent)
     : QMainWindow(parent)
@@ -104,8 +105,7 @@ capturawindow::capturawindow(Capture* cap,
     timer->start(50);
 }
 
-capturawindow::~capturawindow()
-{
+capturawindow::~capturawindow(){
     delete ui;
 }
 
@@ -211,8 +211,8 @@ void capturawindow::actualizarTabla()
     }
 
 }
-void capturawindow::mostrarDetalles()
-{
+
+void capturawindow::mostrarDetalles(){
     int fila = ui->tablePaquetes->currentRow();
 
     if(fila < 0)
@@ -312,8 +312,7 @@ void capturawindow::mostrarDetalles()
     mostrarHex(pkt);
 }
 
-void capturawindow::mostrarHex(const PacketInfo& pkt)
-{
+void capturawindow::mostrarHex(const PacketInfo& pkt){
     QString salida;
 
     for(size_t i = 0; i < pkt.bytes.size(); i += 16)
@@ -356,16 +355,14 @@ void capturawindow::mostrarHex(const PacketInfo& pkt)
     ui->txtHex->setPlainText(salida);
 }
 
-void capturawindow::on_btn_Detener_clicked()
-{
+void capturawindow::on_btn_Detener_clicked(){
     if(captura)
         captura->pausar();
 
     timer->stop();
 }
 
-void capturawindow::on_btn_Reanudar_clicked()
-{
+void capturawindow::on_btn_Reanudar_clicked(){
     if(captura)
         captura->reanudar();
 
@@ -373,8 +370,7 @@ void capturawindow::on_btn_Reanudar_clicked()
     aplicarFiltro("");
 }
 
-void capturawindow::on_btn_Reiniciar_clicked()
-{
+void capturawindow::on_btn_Reiniciar_clicked(){
     if(captura)
     {
         ui->tablePaquetes->setRowCount(0);
