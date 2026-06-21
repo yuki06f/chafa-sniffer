@@ -101,6 +101,123 @@
     <iconset theme="QIcon::ThemeIcon::SystemReboot"/>
    </property>
   </widget>
+  <widget class="QPushButton" name="btnTCP">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>TCP</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnUDP">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>UDP</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnICMP">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>ICMP</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnTodos">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Quitar filtro</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_filtros">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>0</y>
+     <width>151</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Filtrar por tipo de paquete:</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnARP">
+   <property name="geometry">
+    <rect>
+     <x>430</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>ARP</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnHTTP">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>HTTP</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnHTTPS">
+   <property name="geometry">
+    <rect>
+     <x>610</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>HTTPS</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnDNS">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>20</y>
+     <width>81</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>DNS</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
