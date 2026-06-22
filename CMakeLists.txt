@@ -20,10 +20,13 @@ set(NPCAP_LIB_DIR     "${CMAKE_SOURCE_DIR}/libs/npcap/Lib/x64")
 # Archivos fuente 
 add_executable(chafa-sniffer
     src/main.cpp
-    src/gui/mainwindow.cpp
+
     src/gui/mainwindow.h
     src/gui/mainwindow.ui
-    src/gui/capturawindow.h src/gui/capturawindow.cpp src/gui/capturawindow.ui
+
+    src/filters/filter_engine.h
+    src/filters/filters.h
+    src/gui/mainwindow.cpp
 )
 
 # Includes

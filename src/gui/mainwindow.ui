@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1077</width>
+    <width>1485</width>
     <height>600</height>
    </rect>
   </property>
@@ -19,62 +19,55 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="capturar">
+   <widget class="QListWidget" name="interfaces">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>30</y>
-      <width>301</width>
-      <height>71</height>
+      <x>0</x>
+      <y>0</y>
+      <width>581</width>
+      <height>291</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tablePaquetes">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>0</y>
+      <width>901</width>
+      <height>291</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QTreeWidget" name="treeDetalles">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>290</y>
+      <width>581</width>
+      <height>281</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string notr="true">Detalles</string>
+     </property>
+    </column>
+   </widget>
+   <widget class="QPlainTextEdit" name="txtHex">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>290</y>
+      <width>901</width>
+      <height>261</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>28</pointsize>
-      <italic>true</italic>
-      <underline>false</underline>
-      <strikeout>false</strikeout>
-      <fontweight>ExtraBold</fontweight>
+      <family>Consolas</family>
+      <bold>true</bold>
      </font>
-    </property>
-    <property name="text">
-     <string>Capturar</string>
-    </property>
-   </widget>
-   <widget class="QListWidget" name="interfaces">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>140</y>
-      <width>751</width>
-      <height>351</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btnIniciar">
-    <property name="geometry">
-     <rect>
-      <x>800</x>
-      <y>510</y>
-      <width>90</width>
-      <height>29</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Iniciar</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_4">
-    <property name="geometry">
-     <rect>
-      <x>250</x>
-      <y>60</y>
-      <width>90</width>
-      <height>29</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>PushButton</string>
     </property>
    </widget>
   </widget>
@@ -84,7 +77,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1077</width>
+     <width>1485</width>
      <height>25</height>
     </rect>
    </property>
@@ -92,9 +85,7 @@
     <property name="title">
      <string>Archivo</string>
     </property>
-    <addaction name="actionExportar_CSV"/>
     <addaction name="actionGuardar_Captura"/>
-    <addaction name="actionSalir"/>
    </widget>
    <widget class="QMenu" name="menuCaptura">
     <property name="title">
@@ -102,26 +93,30 @@
     </property>
     <addaction name="actionIniciar_Captura"/>
     <addaction name="actionDetener"/>
+    <addaction name="actionReiniciar"/>
    </widget>
    <widget class="QMenu" name="menuFiltros">
     <property name="title">
      <string>Filtros</string>
     </property>
-   </widget>
-   <widget class="QMenu" name="menuHerramientas">
-    <property name="title">
-     <string>Herramientas</string>
-    </property>
+    <addaction name="actionDNS"/>
+    <addaction name="actionTCP"/>
+    <addaction name="actionUDP"/>
+    <addaction name="actionARP"/>
+    <addaction name="actionICMP"/>
+    <addaction name="actionHTTP"/>
+    <addaction name="actionHTTPS"/>
+    <addaction name="actionIP"/>
    </widget>
    <widget class="QMenu" name="menuAyuda">
     <property name="title">
      <string>Ayuda</string>
     </property>
+    <addaction name="actionManual_Usuario"/>
    </widget>
    <addaction name="menuArchivo"/>
    <addaction name="menuCaptura"/>
    <addaction name="menuFiltros"/>
-   <addaction name="menuHerramientas"/>
    <addaction name="menuAyuda"/>
   </widget>
   <action name="actionExportar_CSV">
@@ -162,6 +157,59 @@
    </property>
    <property name="text">
     <string>Detener</string>
+   </property>
+  </action>
+  <action name="actionDNS">
+   <property name="text">
+    <string>DNS</string>
+   </property>
+  </action>
+  <action name="actionTCP">
+   <property name="text">
+    <string>TCP</string>
+   </property>
+  </action>
+  <action name="actionUDP">
+   <property name="text">
+    <string>UDP</string>
+   </property>
+  </action>
+  <action name="actionARP">
+   <property name="text">
+    <string>ARP</string>
+   </property>
+  </action>
+  <action name="actionICMP">
+   <property name="text">
+    <string>ICMP</string>
+   </property>
+  </action>
+  <action name="actionHTTP">
+   <property name="text">
+    <string>HTTP</string>
+   </property>
+  </action>
+  <action name="actionHTTPS">
+   <property name="text">
+    <string>HTTPS</string>
+   </property>
+  </action>
+  <action name="actionIP">
+   <property name="text">
+    <string>IP</string>
+   </property>
+  </action>
+  <action name="actionReiniciar">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::SystemReboot"/>
+   </property>
+   <property name="text">
+    <string>Reiniciar</string>
+   </property>
+  </action>
+  <action name="actionManual_Usuario">
+   <property name="text">
+    <string>Manual Usuario</string>
    </property>
   </action>
  </widget>
