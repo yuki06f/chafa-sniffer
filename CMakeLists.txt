@@ -12,6 +12,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+#excel
+
 # Rutas de Npcap
 set(NPCAP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/libs/npcap/Include")
 set(NPCAP_LIB_DIR     "${CMAKE_SOURCE_DIR}/libs/npcap/Lib/x64")
@@ -27,6 +29,8 @@ add_executable(chafa-sniffer
     src/filters/filter_engine.h
     src/filters/filters.h
     src/gui/mainwindow.cpp
+    src/export/exportador.cpp
+    src/export/exportador.h
 )
 
 # Includes

@@ -3,6 +3,7 @@
 #include "../filters/filter_engine.h"
 #include <QMessageBox>
 #include <QColor>
+#include "../export/exportador.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -36,6 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionDNS, &QAction::triggered, this, [this](){aplicarFiltro("DNS");});
     connect(ui->actionIP, &QAction::triggered, this, [this](){aplicarFiltro("IP");});
 
+    // excel
+    connect(ui->actionExportar_CSV, &QAction::triggered, this, &MainWindow::on_btnExportarTodos_triggered);
     // Configuracion de la tabla de visualizacion de paquetes
     ui->tablePaquetes->setColumnCount(6);
     QStringList headers;
@@ -313,3 +316,26 @@ void MainWindow::mostrarHex(const PacketInfo& pkt)
 
     ui->txtHex->setPlainText(salida);
 }
+    void MainWindow::on_btnExportarTodos_triggered() {
+        qDebug() << "¡Sí entró al botón de exportar!";
+        if (timer->isActive()) {
+            QMessageBox::warning(this, "Captura Activa",
+                                 "¡Aguanta! Detén la captura de red primero antes de exportar a Excel para no corromper los datos.");
+            return; // Cortamos la función aquí para que no exporte
+        }
+
+        std::vector<PacketInfo> datosCapturados = paquetes.obtener_todos();
+
+        // 2. EXTRA: Validar que no vayas a exportar un Excel en blanco.
+        if (datosCapturados.empty()) {
+            QMessageBox::information(this, "Lista Vacía",
+                                     "No hay ningún paquete capturado todavía.");
+            return;
+        }
+
+        // 3. Si todo está bien, ahora sí armamos el Excel.
+        exportarAExcelMultiplataforma(datosCapturados);
+
+        // Opcional: Avisar que ya terminó
+        QMessageBox::information(this, "Éxito", "¡Captura exportada al cien!");
+    }

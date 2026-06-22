@@ -78,7 +78,7 @@
      <x>0</x>
      <y>0</y>
      <width>1485</width>
-     <height>25</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuArchivo">
@@ -86,6 +86,7 @@
      <string>Archivo</string>
     </property>
     <addaction name="actionGuardar_Captura"/>
+    <addaction name="btnExportarTodos"/>
    </widget>
    <widget class="QMenu" name="menuCaptura">
     <property name="title">
@@ -122,7 +123,7 @@
   </widget>
   <action name="actionExportar_CSV">
    <property name="icon">
-    <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+    <iconset theme="QIcon::ThemeIcon::FolderOpen"/>
    </property>
    <property name="text">
     <string>Exportar CSV</string>
@@ -219,6 +220,27 @@
    </property>
    <property name="text">
     <string>Detener</string>
+   </property>
+  </action>
+  <action name="actionbtnExportarTodos">
+   <property name="text">
+    <string>btnExportarTodos</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionbtnExportarTodos_2">
+   <property name="text">
+    <string>btnExportarTodos</string>
+   </property>
+  </action>
+  <action name="btnExportarTodos">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+   </property>
+   <property name="text">
+    <string>Guardar excel</string>
    </property>
   </action>
  </widget>

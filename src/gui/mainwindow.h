@@ -6,6 +6,7 @@
 #include <QString>
 #include <QTreeWidgetItem>
 #include "../capture/capture.h"
+#include "packet_catched.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -34,9 +35,13 @@ private slots:
     void actualizarTabla();
     void mostrarDetalles();
 
+    //excel
+    void on_btnExportarTodos_triggered();
+
 private:
     Ui::MainWindow *ui;
 
+    PacketCatched misCapturas;
     // Variables base
     PacketCatched paquetes;
     Capture* captura;
