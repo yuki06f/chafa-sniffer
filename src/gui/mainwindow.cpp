@@ -3,6 +3,7 @@
 #include "../filters/filter_engine.h"
 #include <QMessageBox>
 #include <QColor>
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -25,6 +26,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionDetener, &QAction::triggered, this, &MainWindow::accion_Detener_triggered);
     connect(ui->actionReiniciar, &QAction::triggered, this, &MainWindow::accion_Reiniciar_triggered);
     connect(ui->actionSalir, &QAction::triggered, this, &QWidget::close);
+    connect(ui->actionIP_Fuente,&QAction::triggered,this,&MainWindow::filtrarIPFuente);
+    connect(ui->actionIP_Destino,&QAction::triggered,this,&MainWindow::filtrarIPDestino);
+    connect(ui->actionPuerto_Fuente,&QAction::triggered,this,&MainWindow::filtrarPuertoFuente);
+    connect(ui->actionPuerto_Destino,&QAction::triggered,this,&MainWindow::filtrarPuertoDestino);
 
     // Mapeo de filtros rapidos
     connect(ui->actionTCP, &QAction::triggered, this, [this](){aplicarFiltro("TCP");});
@@ -34,8 +39,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionHTTP, &QAction::triggered, this, [this](){aplicarFiltro("HTTP");});
     connect(ui->actionHTTPS, &QAction::triggered, this, [this](){aplicarFiltro("HTTPS");});
     connect(ui->actionDNS, &QAction::triggered, this, [this](){aplicarFiltro("DNS");});
-    connect(ui->actionIP, &QAction::triggered, this, [this](){aplicarFiltro("IP");});
-
     // Configuracion de la tabla de visualizacion de paquetes
     ui->tablePaquetes->setColumnCount(6);
     QStringList headers;
@@ -118,6 +121,123 @@ void MainWindow::accion_Reiniciar_triggered(){
         ui->interfaces->setEnabled(true);
     }
 }
+void MainWindow::filtrarIPFuente()
+{
+    bool ok;
+
+    QString ip = QInputDialog::getText(
+        this,
+        "Filtro IP Fuente",
+        "Ingrese la IP origen:",
+        QLineEdit::Normal,
+        "",
+        &ok
+        );
+
+    if(!ok || ip.isEmpty())
+        return;
+
+    ui->tablePaquetes->setRowCount(0);
+
+    auto paquetes = captura->obtenerPaquetes()->obtener_todos();
+
+    for(const auto& pkt : paquetes)
+    {
+        if(QString::fromStdString(pkt.ip_org) == ip)
+        {
+            agregarPaqueteATabla(pkt);
+        }
+    }
+}
+void MainWindow::filtrarIPDestino()
+{
+    bool ok;
+
+    QString ip = QInputDialog::getText(
+        this,
+        "Filtro IP Destino",
+        "Ingrese la IP destino:",
+        QLineEdit::Normal,
+        "",
+        &ok
+        );
+
+    if(!ok || ip.isEmpty())
+        return;
+
+    ui->tablePaquetes->setRowCount(0);
+
+    auto paquetes = captura->obtenerPaquetes()->obtener_todos();
+
+    for(const auto& pkt : paquetes)
+    {
+        if(QString::fromStdString(pkt.ip_dst) == ip)
+        {
+            agregarPaqueteATabla(pkt);
+        }
+    }
+}
+void MainWindow::filtrarPuertoFuente()
+{
+    bool ok;
+
+    int puerto = QInputDialog::getInt(
+        this,
+        "Filtro Puerto Fuente",
+        "Ingrese el puerto origen:",
+        80,
+        0,
+        65535,
+        1,
+        &ok
+        );
+
+    if(!ok)
+        return;
+
+    ui->tablePaquetes->setRowCount(0);
+
+    auto paquetes = captura->obtenerPaquetes()->obtener_todos();
+
+    for(const auto& pkt : paquetes)
+    {
+        if(pkt.puerto_org == puerto)
+        {
+            agregarPaqueteATabla(pkt);
+        }
+    }
+}
+void MainWindow::filtrarPuertoDestino()
+{
+    bool ok;
+
+    int puerto = QInputDialog::getInt(
+        this,
+        "Filtro Puerto Destino",
+        "Ingrese el puerto destino:",
+        80,
+        0,
+        65535,
+        1,
+        &ok
+        );
+
+    if(!ok)
+        return;
+
+    ui->tablePaquetes->setRowCount(0);
+
+    auto paquetes = captura->obtenerPaquetes()->obtener_todos();
+
+    for(const auto& pkt : paquetes)
+    {
+        if(pkt.puerto_dst == puerto)
+        {
+            agregarPaqueteATabla(pkt);
+        }
+    }
+}
+
 
 void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
 {
@@ -144,16 +264,15 @@ void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
             ui->tablePaquetes->insertRow(filaVisual);
 
             QString protoStr = QString::fromStdString(paquetesCapturados[i].protocolo);
-            QColor colorFondo = QColor(255, 255, 255); // Blanco por defecto
-
+            QColor colorFondo = QColor(255, 255, 255);    // Fondo oscuro
+            QColor colorTexto = QColor(0, 0, 0);
             // Asignacion de colores tipo Wireshark
-            if (protoStr == "TCP") colorFondo = QColor(231, 230, 255);       // Morado claro
-            else if (protoStr == "UDP") colorFondo = QColor(218, 238, 255);  // Azul claro
-            else if (protoStr == "HTTP") colorFondo = QColor(228, 255, 199); // Verde claro
-            else if (protoStr == "ICMP") colorFondo = QColor(252, 224, 255); // Rosa
-            else if (protoStr == "ARP") colorFondo = QColor(214, 232, 255);  // Azul muy palido
-            else if (protoStr == "DNS") colorFondo = QColor(218, 238, 255);
-
+            if (protoStr == "TCP") colorFondo = QColor(60, 60, 160);
+            else if (protoStr == "UDP") colorFondo = QColor(0, 150, 150);
+            else if (protoStr == "HTTP") colorFondo = QColor(40, 120, 40);
+            else if (protoStr == "ICMP") colorFondo = QColor(160, 40, 160);
+            else if (protoStr == "ARP") colorFondo = QColor(160, 160, 40);
+            else if (protoStr == "DNS") colorFondo = QColor(180, 100, 40);
             // Obtener el resumen con banderas desde el parser
             QString infoStr = QString::fromStdString(paquetesCapturados[i].info_resumen);
 
@@ -193,7 +312,7 @@ void MainWindow::actualizarTabla()
         ui->tablePaquetes->insertRow(fila);
 
         QString protoStr = QString::fromStdString(paquetesCapturados[i].protocolo);
-        QColor colorFondo = QColor(255, 255, 255);
+        QColor colorFondo = QColor(255, 255, 255);    // Fondo oscuro
         QColor colorTexto = QColor(0, 0, 0);
         // Asignacion de colores tipo Wireshark
         if (protoStr == "TCP") colorFondo = QColor(60, 60, 160);
@@ -312,4 +431,37 @@ void MainWindow::mostrarHex(const PacketInfo& pkt)
     }
 
     ui->txtHex->setPlainText(salida);
+}
+void MainWindow::agregarPaqueteATabla(const PacketInfo& pkt)
+{
+    int fila = ui->tablePaquetes->rowCount();
+    ui->tablePaquetes->insertRow(fila);
+
+    QString protoStr = QString::fromStdString(pkt.protocolo);
+    QColor colorFondo = QColor(255, 255, 255);    // Fondo oscuro
+    QColor colorTexto = QColor(0, 0, 0);
+    // Asignacion de colores tipo Wireshark
+    if (protoStr == "TCP") colorFondo = QColor(60, 60, 160);
+    else if (protoStr == "UDP") colorFondo = QColor(0, 150, 150);
+    else if (protoStr == "HTTP") colorFondo = QColor(40, 120, 40);
+    else if (protoStr == "ICMP") colorFondo = QColor(160, 40, 160);
+    else if (protoStr == "ARP") colorFondo = QColor(160, 160, 40);
+    else if (protoStr == "DNS") colorFondo = QColor(180, 100, 40);
+
+    // Obtener el resumen con banderas
+    QString infoStr = QString::fromStdString(pkt.info_resumen);
+
+    QTableWidgetItem* item[6];
+    item[0] = new QTableWidgetItem(QString::number(pkt.numero));
+    item[1] = new QTableWidgetItem(QString::fromStdString(pkt.tiempo));
+    item[2] = new QTableWidgetItem(QString::fromStdString(pkt.ip_org));
+    item[3] = new QTableWidgetItem(QString::fromStdString(pkt.ip_dst));
+    item[4] = new QTableWidgetItem(protoStr);
+    item[5] = new QTableWidgetItem(infoStr);
+
+    for(int c = 0; c < 6; c++){
+        item[c]->setBackground(colorFondo);
+        item[c]->setForeground(colorTexto);
+        ui->tablePaquetes->setItem(fila, c, item[c]);
+    }
 }

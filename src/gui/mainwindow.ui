@@ -100,6 +100,20 @@
     <property name="title">
      <string>Filtros</string>
     </property>
+    <widget class="QMenu" name="menuIP">
+     <property name="title">
+      <string>IP</string>
+     </property>
+     <addaction name="actionIP_Destino"/>
+     <addaction name="actionIP_Fuente"/>
+    </widget>
+    <widget class="QMenu" name="menuPuerto">
+     <property name="title">
+      <string>Puerto</string>
+     </property>
+     <addaction name="actionPuerto_Destino"/>
+     <addaction name="actionPuerto_Fuente"/>
+    </widget>
     <addaction name="actionDNS"/>
     <addaction name="actionTCP"/>
     <addaction name="actionUDP"/>
@@ -107,7 +121,9 @@
     <addaction name="actionICMP"/>
     <addaction name="actionHTTP"/>
     <addaction name="actionHTTPS"/>
-    <addaction name="actionIP"/>
+    <addaction name="menuIP"/>
+    <addaction name="separator"/>
+    <addaction name="menuPuerto"/>
    </widget>
    <widget class="QMenu" name="menuAyuda">
     <property name="title">
@@ -195,11 +211,6 @@
     <string>HTTPS</string>
    </property>
   </action>
-  <action name="actionIP">
-   <property name="text">
-    <string>IP</string>
-   </property>
-  </action>
   <action name="actionReiniciar">
    <property name="icon">
     <iconset theme="QIcon::ThemeIcon::SystemReboot"/>
@@ -219,6 +230,26 @@
    </property>
    <property name="text">
     <string>Detener</string>
+   </property>
+  </action>
+  <action name="actionIP_Destino">
+   <property name="text">
+    <string>IP Destino</string>
+   </property>
+  </action>
+  <action name="actionIP_Fuente">
+   <property name="text">
+    <string>IP Fuente</string>
+   </property>
+  </action>
+  <action name="actionPuerto_Destino">
+   <property name="text">
+    <string>Puerto Destino</string>
+   </property>
+  </action>
+  <action name="actionPuerto_Fuente">
+   <property name="text">
+    <string>Puerto Fuente</string>
    </property>
   </action>
  </widget>
