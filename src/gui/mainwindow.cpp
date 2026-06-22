@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionIP_Destino,&QAction::triggered,this,&MainWindow::filtrarIPDestino);
     connect(ui->actionPuerto_Fuente,&QAction::triggered,this,&MainWindow::filtrarPuertoFuente);
     connect(ui->actionPuerto_Destino,&QAction::triggered,this,&MainWindow::filtrarPuertoDestino);
+    connect(ui->actionLimpiar,&QAction::triggered,this,&MainWindow::accion_Limpiar_triggered);
     connect(ui->actionExportarTodos, &QAction::triggered, this, &MainWindow::action_ExportarTodos_triggered);
     // Mapeo de filtros rapidos
     connect(ui->actionTCP, &QAction::triggered, this, [this](){aplicarFiltro("TCP");});
@@ -120,6 +121,19 @@ void MainWindow::accion_Reiniciar_triggered(){
 
         ui->interfaces->setEnabled(true);
     }
+}
+void MainWindow::accion_Limpiar_triggered() {
+
+    ui->tablePaquetes->setRowCount(0);
+
+
+    auto todosLosPaquetes = captura->obtenerPaquetes()->obtener_todos();
+
+    for(const auto& pkt : todosLosPaquetes) {
+        agregarPaqueteATabla(pkt);
+    }
+
+    qDebug() << "Tabla recargada con todos los paquetes.";
 }
 void MainWindow::filtrarIPFuente()
 {
@@ -470,21 +484,44 @@ void MainWindow::action_ExportarTodos_triggered() {
     if (timer->isActive()) {
         QMessageBox::warning(this, "Captura Activa",
                              "¡Aguanta! Detén la captura de red primero antes de exportar a Excel para no corromper los datos.");
-        return; // Cortamos la función aquí para que no exporte
+        return;
     }
 
-    std::vector<PacketInfo> datosCapturados = paquetes.obtener_todos();
 
-    // 2. EXTRA: Validar que no vayas a exportar un Excel en blanco.
-    if (datosCapturados.empty()) {
+    std::vector<PacketInfo> todosLosPaquetes = paquetes.obtener_todos();
+
+    if (todosLosPaquetes.empty()) {
         QMessageBox::information(this, "Lista Vacía",
                                  "No hay ningún paquete capturado todavía.");
         return;
     }
 
-    // 3. Si todo está bien, ahora sí armamos el Excel.
-    exportarAExcelMultiplataforma(datosCapturados);
+    std::vector<PacketInfo> datosAExportar;
+    int filasEnTabla = ui->tablePaquetes->rowCount();
 
-    // Opcional: Avisar que ya terminó
+    if (filasEnTabla == 0) {
+        QMessageBox::information(this, "Filtro Vacío",
+                                 "No hay paquetes en la tabla para exportar con el filtro actual.");
+        return;
+    }
+
+    for (int i = 0; i < filasEnTabla; i++) {
+        QTableWidgetItem* itemNo = ui->tablePaquetes->item(i, 0);
+        if (itemNo) {
+            int idPaqueteReal = itemNo->text().toInt();
+
+            for (const auto& pkt : todosLosPaquetes) {
+                if (pkt.numero == idPaqueteReal) {
+                    datosAExportar.push_back(pkt);
+                    break;
+                }
+            }
+        }
+    }
+
+
+    exportarAExcelMultiplataforma(datosAExportar);
+
+
     QMessageBox::information(this, "Éxito", "¡Captura exportada al cien!");
 }

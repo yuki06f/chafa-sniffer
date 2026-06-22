@@ -124,17 +124,11 @@
     <addaction name="menuIP"/>
     <addaction name="separator"/>
     <addaction name="menuPuerto"/>
-   </widget>
-   <widget class="QMenu" name="menuAyuda">
-    <property name="title">
-     <string>Ayuda</string>
-    </property>
-    <addaction name="actionManual_Usuario"/>
+    <addaction name="actionLimpiar"/>
    </widget>
    <addaction name="menuArchivo"/>
    <addaction name="menuCaptura"/>
    <addaction name="menuFiltros"/>
-   <addaction name="menuAyuda"/>
   </widget>
   <action name="actionExportar_CSV">
    <property name="icon">
@@ -250,6 +244,11 @@
   <action name="actionPuerto_Fuente">
    <property name="text">
     <string>Puerto Fuente</string>
+   </property>
+  </action>
+  <action name="actionLimpiar">
+   <property name="text">
+    <string>Limpiar</string>
    </property>
   </action>
  </widget>

@@ -30,6 +30,7 @@ private slots:
     void accion_Reiniciar_triggered();
     void accion_Pausar_triggered();
     void action_ExportarTodos_triggered();
+    void accion_Limpiar_triggered();
     void filtrarIPFuente();
     void filtrarIPDestino();
     void filtrarPuertoFuente();
