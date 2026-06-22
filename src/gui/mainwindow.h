@@ -6,7 +6,6 @@
 #include <QString>
 #include <QTreeWidgetItem>
 #include "../capture/capture.h"
-#include "packet_catched.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,6 +29,7 @@ private slots:
     void accion_Detener_triggered();
     void accion_Reiniciar_triggered();
     void accion_Pausar_triggered();
+    void action_ExportarTodos_triggered();
     void filtrarIPFuente();
     void filtrarIPDestino();
     void filtrarPuertoFuente();
@@ -39,13 +39,9 @@ private slots:
     void actualizarTabla();
     void mostrarDetalles();
 
-    //excel
-    void on_btnExportarTodos_triggered();
-
 private:
     Ui::MainWindow *ui;
 
-    PacketCatched misCapturas;
     // Variables base
     PacketCatched paquetes;
     Capture* captura;
