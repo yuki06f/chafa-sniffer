@@ -10,27 +10,22 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // 1. Inicializar la Captura
+    // Inicializacion del backend de captura
     captura = new Capture(&paquetes);
 
-    // 2. Cargar interfaces en la lista
+    // Poblar lista de interfaces de red al arrancar
     cargarInterfaces();
 
-    // Conectar el doble clic de la lista para iniciar captura
     connect(ui->interfaces, &QListWidget::itemDoubleClicked,
             this, &MainWindow::iniciarCapturaDesdeLista);
 
-    // === CONEXIONES DE LA BARRA DE MENÚ (QActions) ===
-
-    // Controles principales
+    // Conexiones del menu principal
     connect(ui->actionIniciar_Captura, &QAction::triggered, this, &MainWindow::accion_Iniciar_triggered);
     connect(ui->actionDetener, &QAction::triggered, this, &MainWindow::accion_Detener_triggered);
     connect(ui->actionReiniciar, &QAction::triggered, this, &MainWindow::accion_Reiniciar_triggered);
-
-    // Salir del programa
     connect(ui->actionSalir, &QAction::triggered, this, &QWidget::close);
 
-    // Filtros desde el Menú
+    // Mapeo de filtros rapidos
     connect(ui->actionTCP, &QAction::triggered, this, [this](){aplicarFiltro("TCP");});
     connect(ui->actionUDP, &QAction::triggered, this, [this](){aplicarFiltro("UDP");});
     connect(ui->actionICMP, &QAction::triggered, this, [this](){aplicarFiltro("ICMP");});
@@ -39,12 +34,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionHTTPS, &QAction::triggered, this, [this](){aplicarFiltro("HTTPS");});
     connect(ui->actionDNS, &QAction::triggered, this, [this](){aplicarFiltro("DNS");});
     connect(ui->actionIP, &QAction::triggered, this, [this](){aplicarFiltro("IP");});
-    // Nota: Como en tu .ui no vi un botón "actionTodos" para quitar filtros,
-    // te recomiendo añadir uno en Qt Designer y conectarlo usando: aplicarFiltro("");
 
-    // === CONFIGURAR TABLA ===
+    // Configuracion de la tabla de visualizacion de paquetes
     ui->tablePaquetes->setColumnCount(6);
-
     QStringList headers;
     headers << "No." << "Tiempo" << "Origen" << "Destino" << "Protocolo" << "Longitud";
 
@@ -55,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->tablePaquetes, &QTableWidget::itemClicked, this, &MainWindow::mostrarDetalles);
 
-    // === CONFIGURAR TIMER ===
+    // Timer para polling de actualizaciones en la UI
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::actualizarTabla);
 }
@@ -67,7 +59,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-// === LÓGICA DE INTERFACES ===
 void MainWindow::cargarInterfaces()
 {
     ui->interfaces->clear();
@@ -79,31 +70,38 @@ void MainWindow::cargarInterfaces()
     }
 }
 
-void MainWindow::iniciarCapturaDesdeLista()
-{
+void MainWindow::iniciarCapturaDesdeLista() {
     QListWidgetItem* item = ui->interfaces->currentItem();
     if(!item) return;
 
     std::string nombreReal = captura->obtenerNombre(item->text().toStdString());
 
-    if(captura->iniciar(nombreReal))
-    {
+    if(captura->iniciar(nombreReal)) {
         timer->start(50);
+
+        // Bloquear control para evitar colisiones de inicio multiple
+        ui->interfaces->setEnabled(false);
     }
 }
 
-// === ACCIONES DE LA BARRA DE MENÚ ===
 void MainWindow::accion_Iniciar_triggered(){
-    // Si la captura estaba pausada, la reanudamos
     if(captura) captura->reanudar();
     if(!timer->isActive()) timer->start(50);
 
-    aplicarFiltro(""); // Quita los filtros para seguir visualizando todo
+    aplicarFiltro("");
+}
+
+void MainWindow::accion_Pausar_triggered(){
+    if(captura) captura->pausar();
+    if(timer) timer->stop();
 }
 
 void MainWindow::accion_Detener_triggered(){
-    if(captura) captura->pausar();
+    if(captura) captura->detener();
     if(timer) timer->stop();
+
+    // Liberar UI para permitir una nueva captura
+    ui->interfaces->setEnabled(true);
 }
 
 void MainWindow::accion_Reiniciar_triggered(){
@@ -114,13 +112,15 @@ void MainWindow::accion_Reiniciar_triggered(){
         ui->tablePaquetes->clearContents();
         captura->reiniciar();
         aplicarFiltro("");
+
+        ui->interfaces->setEnabled(true);
     }
 }
 
-// === LÓGICA DE FILTROS ===
 void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
 {
     if(!captura) return;
+
     timer->stop();
     ui->tablePaquetes->setRowCount(0);
 
@@ -131,6 +131,7 @@ void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
     for(size_t i = 0; i < paquetesCapturados.size(); i++){
         bool cumpleFiltro = false;
 
+        // Evaluacion de reglas de filtrado por protocolo/puerto
         if(protocoloFiltro.isEmpty()) { cumpleFiltro = true; }
         else if (filtroStd == "HTTP") { cumpleFiltro = (paquetesCapturados[i].puerto_org == 80 || paquetesCapturados[i].puerto_dst == 80); }
         else if (filtroStd == "HTTPS") { cumpleFiltro = (paquetesCapturados[i].puerto_org == 443 || paquetesCapturados[i].puerto_dst == 443); }
@@ -155,12 +156,12 @@ void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
     }
 }
 
-// === ACTUALIZACIÓN DE TABLA ===
 void MainWindow::actualizarTabla()
 {
     if(!captura) return;
     auto paquetesCapturados = captura->obtenerPaquetes()->obtener_todos();
 
+    // Insertar unicamente los paquetes nuevos desde el ultimo poll
     for(size_t i = ultimoPaqueteMostrado; i < paquetesCapturados.size(); i++)
     {
         int fila = ui->tablePaquetes->rowCount();
@@ -182,7 +183,6 @@ void MainWindow::actualizarTabla()
     }
 }
 
-// === MOSTRAR DETALLES Y HEXADECIMAL ===
 void MainWindow::mostrarDetalles()
 {
     if(!captura) return;
@@ -202,24 +202,29 @@ void MainWindow::mostrarDetalles()
             break;
         }
     }
+
     if(!encontrado) return;
 
     ui->treeDetalles->clear();
 
+    // Nivel 1: Trama
     QTreeWidgetItem* frame = new QTreeWidgetItem(ui->treeDetalles);
     frame->setText(0, QString("Frame %1: %2 bytes").arg(pkt.numero).arg(pkt.longitud));
 
+    // Nivel 2: Enlace (Ethernet)
     QTreeWidgetItem* eth = new QTreeWidgetItem(ui->treeDetalles);
     eth->setText(0, QString("Ethernet II"));
     new QTreeWidgetItem(eth, QStringList() << ("Source: " + QString::fromStdString(pkt.mac_org)));
     new QTreeWidgetItem(eth, QStringList() << ("Destination: " + QString::fromStdString(pkt.mac_dst)));
 
+    // Nivel 3: Red (IP)
     QTreeWidgetItem* ip = new QTreeWidgetItem(ui->treeDetalles);
     ip->setText(0, "Internet Protocol");
     new QTreeWidgetItem(ip, QStringList() << ("Source: " + QString::fromStdString(pkt.ip_org)));
     new QTreeWidgetItem(ip, QStringList() << ("Destination: " + QString::fromStdString(pkt.ip_dst)));
     new QTreeWidgetItem(ip, QStringList() << ("TTL: " + QString::number(pkt.ttl)));
 
+    // Nivel 4: Transporte/Aplicacion
     QTreeWidgetItem* proto = new QTreeWidgetItem(ui->treeDetalles);
     proto->setText(0, QString::fromStdString(pkt.protocolo));
     new QTreeWidgetItem(proto, QStringList() << ("Puerto origen: " + QString::number(pkt.puerto_org)));
@@ -231,6 +236,8 @@ void MainWindow::mostrarDetalles()
 void MainWindow::mostrarHex(const PacketInfo& pkt)
 {
     QString salida;
+
+    // Generacion de hexdump en formato estandar de 16 bytes por linea
     for(size_t i = 0; i < pkt.bytes.size(); i += 16)
     {
         salida += QString("%1   ").arg(i, 4, 16, QChar('0')).toUpper();
@@ -243,6 +250,8 @@ void MainWindow::mostrarHex(const PacketInfo& pkt)
             {
                 uint8_t byte = pkt.bytes[i + j];
                 hexParte += QString("%1 ").arg(byte, 2, 16, QChar('0')).toUpper();
+
+                // Imprimir caracter si es imprimible, de lo contrario '.'
                 if(byte >= 32 && byte <= 126) asciiParte += QChar(byte);
                 else asciiParte += ".";
             }
@@ -254,5 +263,6 @@ void MainWindow::mostrarHex(const PacketInfo& pkt)
         }
         salida += hexParte + "   " + asciiParte + "\n";
     }
+
     ui->txtHex->setPlainText(salida);
 }

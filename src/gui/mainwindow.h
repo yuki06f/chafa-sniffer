@@ -28,6 +28,7 @@ private slots:
     void accion_Iniciar_triggered();
     void accion_Detener_triggered();
     void accion_Reiniciar_triggered();
+    void accion_Pausar_triggered();
 
     // Actualización y visualización
     void actualizarTabla();

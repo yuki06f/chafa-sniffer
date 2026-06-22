@@ -92,8 +92,9 @@
      <string>Captura</string>
     </property>
     <addaction name="actionIniciar_Captura"/>
-    <addaction name="actionDetener"/>
+    <addaction name="actionPausar"/>
     <addaction name="actionReiniciar"/>
+    <addaction name="actionDetener"/>
    </widget>
    <widget class="QMenu" name="menuFiltros">
     <property name="title">
@@ -151,12 +152,12 @@
     <string>Iniciar</string>
    </property>
   </action>
-  <action name="actionDetener">
+  <action name="actionPausar">
    <property name="icon">
-    <iconset theme="QIcon::ThemeIcon::MediaPlaybackStop"/>
+    <iconset theme="QIcon::ThemeIcon::MediaPlaybackPause"/>
    </property>
    <property name="text">
-    <string>Detener</string>
+    <string>Pausar</string>
    </property>
   </action>
   <action name="actionDNS">
@@ -210,6 +211,14 @@
   <action name="actionManual_Usuario">
    <property name="text">
     <string>Manual Usuario</string>
+   </property>
+  </action>
+  <action name="actionDetener">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::MediaPlaybackStop"/>
+   </property>
+   <property name="text">
+    <string>Detener</string>
    </property>
   </action>
  </widget>
