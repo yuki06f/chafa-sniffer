@@ -30,6 +30,10 @@ private slots:
     void accion_Detener_triggered();
     void accion_Reiniciar_triggered();
     void accion_Pausar_triggered();
+    void filtrarIPFuente();
+    void filtrarIPDestino();
+    void filtrarPuertoFuente();
+    void filtrarPuertoDestino();
 
     // Actualización y visualización
     void actualizarTabla();
@@ -49,6 +53,7 @@ private:
 
     // Lógica de Filtros
     void aplicarFiltro(const QString& protocoloFiltro);
+    void agregarPaqueteATabla(const PacketInfo& pkt); // Agrega esta linea
 
     // Variables y lógica de visualización
     int ultimoPaqueteMostrado;
