@@ -22,6 +22,7 @@ struct ip_header{
     uint32_t ip_org;
     uint32_t ip_dst;
 };
+
 struct ipv6_header{
     uint32_t version_tc_flow;
     uint16_t payload_length;
@@ -62,6 +63,9 @@ public:
         if (longitud < 14)
             return;
 
+        // Info por defecto para cualquier paquete no reconocido
+        info.info_resumen = "Len=" + to_string(longitud);
+
         const ethernet_header* eth =
             reinterpret_cast<const ethernet_header*>(crudo);
 
@@ -97,42 +101,35 @@ public:
                 info.puerto_org = ntohs(tcp->puerto_org);
                 info.puerto_dst = ntohs(tcp->puerto_dst);
 
-                string servicio =
-                    detectarServicio(info.puerto_dst);
+                string servicio = detectarServicio(info.puerto_dst);
+                if(servicio.empty()) servicio = detectarServicio(info.puerto_org);
 
-                if(servicio.empty())
-                    servicio =
-                        detectarServicio(info.puerto_org);
+                if(!servicio.empty()) info.protocolo = servicio;
+                else info.protocolo = "TCP IPv6";
 
-                if(!servicio.empty())
-                    info.protocolo = servicio;
-                else
-                    info.protocolo = "TCP IPv6";
+                // Extraccion de banderas TCP
+                string banderas = extraerBanderasTCP(tcp->flags);
+                info.info_resumen = to_string(info.puerto_org) + " -> " + to_string(info.puerto_dst);
+                if(!banderas.empty()) info.info_resumen += " [" + banderas + "]";
+                info.info_resumen += " Len=" + to_string(longitud);
             }
 
             else if(ip6->next_header == 17) // UDP
             {
                 const uint8_t* udp = crudo + 14 + 40;
 
-                info.puerto_org =
-                    ntohs(*reinterpret_cast<const uint16_t*>(udp));
+                info.puerto_org = ntohs(*reinterpret_cast<const uint16_t*>(udp));
+                info.puerto_dst = ntohs(*reinterpret_cast<const uint16_t*>(udp + 2));
 
-                info.puerto_dst =
-                    ntohs(*reinterpret_cast<const uint16_t*>(udp + 2));
+                string servicio = detectarServicio(info.puerto_dst);
+                if(servicio.empty()) servicio = detectarServicio(info.puerto_org);
 
-                string servicio =
-                    detectarServicio(info.puerto_dst);
+                if(!servicio.empty()) info.protocolo = servicio;
+                else info.protocolo = "UDP IPv6";
 
-                if(servicio.empty())
-                    servicio =
-                        detectarServicio(info.puerto_org);
-
-                if(!servicio.empty())
-                    info.protocolo = servicio;
-                else
-                    info.protocolo = "UDP IPv6";
+                // Resumen para UDP
+                info.info_resumen = to_string(info.puerto_org) + " -> " + to_string(info.puerto_dst) + " Len=" + to_string(longitud);
             }
-
             else
             {
                 info.protocolo = "IPv6";
@@ -158,8 +155,7 @@ public:
         info.ttl = ip->ttl;
         info.protocolo_num = ip->protocol;
 
-        int ip_header_len =
-            (ip->version_ihl & 0x0F) * 4;
+        int ip_header_len = (ip->version_ihl & 0x0F) * 4;
 
         // TCP
         if (ip->protocol == 6)
@@ -168,23 +164,22 @@ public:
                 return;
 
             const tcp_header* tcp =
-                reinterpret_cast<const tcp_header*>(
-                    crudo + 14 + ip_header_len);
+                reinterpret_cast<const tcp_header*>(crudo + 14 + ip_header_len);
 
             info.puerto_org = ntohs(tcp->puerto_org);
             info.puerto_dst = ntohs(tcp->puerto_dst);
 
-            string servicio =
-                detectarServicio(info.puerto_dst);
+            string servicio = detectarServicio(info.puerto_dst);
+            if(servicio.empty()) servicio = detectarServicio(info.puerto_org);
 
-            if(servicio.empty())
-                servicio =
-                    detectarServicio(info.puerto_org);
+            if(!servicio.empty()) info.protocolo = servicio;
+            else info.protocolo = "TCP";
 
-            if(!servicio.empty())
-                info.protocolo = servicio;
-            else
-                info.protocolo = "TCP";
+            // Extraccion de banderas TCP
+            string banderas = extraerBanderasTCP(tcp->flags);
+            info.info_resumen = to_string(info.puerto_org) + " -> " + to_string(info.puerto_dst);
+            if(!banderas.empty()) info.info_resumen += " [" + banderas + "]";
+            info.info_resumen += " Len=" + to_string(longitud);
         }
 
         // UDP
@@ -193,26 +188,19 @@ public:
             if (longitud < 14 + ip_header_len + 8)
                 return;
 
-            const uint8_t* udp =
-                crudo + 14 + ip_header_len;
+            const uint8_t* udp = crudo + 14 + ip_header_len;
 
-            info.puerto_org =
-                ntohs(*reinterpret_cast<const uint16_t*>(udp));
+            info.puerto_org = ntohs(*reinterpret_cast<const uint16_t*>(udp));
+            info.puerto_dst = ntohs(*reinterpret_cast<const uint16_t*>(udp + 2));
 
-            info.puerto_dst =
-                ntohs(*reinterpret_cast<const uint16_t*>(udp + 2));
+            string servicio = detectarServicio(info.puerto_dst);
+            if(servicio.empty()) servicio = detectarServicio(info.puerto_org);
 
-            string servicio =
-                detectarServicio(info.puerto_dst);
+            if(!servicio.empty()) info.protocolo = servicio;
+            else info.protocolo = "UDP";
 
-            if(servicio.empty())
-                servicio =
-                    detectarServicio(info.puerto_org);
-
-            if(!servicio.empty())
-                info.protocolo = servicio;
-            else
-                info.protocolo = "UDP";
+            // Resumen para UDP
+            info.info_resumen = to_string(info.puerto_org) + " -> " + to_string(info.puerto_dst) + " Len=" + to_string(longitud);
         }
 
         // ICMP
@@ -228,6 +216,23 @@ public:
     }
 
 private:
+
+
+    static string extraerBanderasTCP(uint8_t flags)
+    {
+        string banderas = "";
+        if (flags & 0x01) banderas += "FIN, ";
+        if (flags & 0x02) banderas += "SYN, ";
+        if (flags & 0x04) banderas += "RST, ";
+        if (flags & 0x08) banderas += "PSH, ";
+        if (flags & 0x10) banderas += "ACK, ";
+        if (flags & 0x20) banderas += "URG, ";
+
+        if (!banderas.empty()) {
+            banderas = banderas.substr(0, banderas.length() - 2); // Remueve coma y espacio final
+        }
+        return banderas;
+    }
 
     static string detectarServicio(uint16_t puerto)
     {
@@ -283,6 +288,7 @@ private:
                to_string((ip_host >> 8) & 0xFF) + "." +
                to_string(ip_host & 0xFF);
     }
+
     static string ipv6_string(const uint8_t* ip)
     {
         char buffer[40];

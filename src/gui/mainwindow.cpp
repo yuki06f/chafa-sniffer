@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "../filters/filter_engine.h"
 #include <QMessageBox>
+#include <QColor>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -38,7 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
     // Configuracion de la tabla de visualizacion de paquetes
     ui->tablePaquetes->setColumnCount(6);
     QStringList headers;
-    headers << "No." << "Tiempo" << "Origen" << "Destino" << "Protocolo" << "Longitud";
+    // Cambiamos "Longitud" por "Info" en el titulo de la columna
+    headers << "No." << "Tiempo" << "Origen" << "Destino" << "Protocolo" << "Info";
 
     ui->tablePaquetes->setHorizontalHeaderLabels(headers);
     ui->tablePaquetes->horizontalHeader()->setStretchLastSection(true);
@@ -140,12 +142,35 @@ void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
 
         if(cumpleFiltro){
             ui->tablePaquetes->insertRow(filaVisual);
-            ui->tablePaquetes->setItem(filaVisual, 0, new QTableWidgetItem(QString::number(paquetesCapturados[i].numero)));
-            ui->tablePaquetes->setItem(filaVisual, 1, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].tiempo)));
-            ui->tablePaquetes->setItem(filaVisual, 2, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_org)));
-            ui->tablePaquetes->setItem(filaVisual, 3, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_dst)));
-            ui->tablePaquetes->setItem(filaVisual, 4, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].protocolo)));
-            ui->tablePaquetes->setItem(filaVisual, 5, new QTableWidgetItem(QString::number(paquetesCapturados[i].longitud)));
+
+            QString protoStr = QString::fromStdString(paquetesCapturados[i].protocolo);
+            QColor colorFondo = QColor(255, 255, 255); // Blanco por defecto
+
+            // Asignacion de colores tipo Wireshark
+            if (protoStr == "TCP") colorFondo = QColor(231, 230, 255);       // Morado claro
+            else if (protoStr == "UDP") colorFondo = QColor(218, 238, 255);  // Azul claro
+            else if (protoStr == "HTTP") colorFondo = QColor(228, 255, 199); // Verde claro
+            else if (protoStr == "ICMP") colorFondo = QColor(252, 224, 255); // Rosa
+            else if (protoStr == "ARP") colorFondo = QColor(214, 232, 255);  // Azul muy palido
+            else if (protoStr == "DNS") colorFondo = QColor(218, 238, 255);
+
+            // Obtener el resumen con banderas desde el parser
+            QString infoStr = QString::fromStdString(paquetesCapturados[i].info_resumen);
+
+            // Crear items de la tabla
+            QTableWidgetItem* item[6];
+            item[0] = new QTableWidgetItem(QString::number(paquetesCapturados[i].numero));
+            item[1] = new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].tiempo));
+            item[2] = new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_org));
+            item[3] = new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_dst));
+            item[4] = new QTableWidgetItem(protoStr);
+            item[5] = new QTableWidgetItem(infoStr);
+
+            // Aplicar el color a cada celda de la fila
+            for(int c = 0; c < 6; c++){
+                item[c]->setBackground(colorFondo);
+                ui->tablePaquetes->setItem(filaVisual, c, item[c]);
+            }
             filaVisual++;
         }
     }
@@ -166,12 +191,34 @@ void MainWindow::actualizarTabla()
     {
         int fila = ui->tablePaquetes->rowCount();
         ui->tablePaquetes->insertRow(fila);
-        ui->tablePaquetes->setItem(fila,0, new QTableWidgetItem(QString::number(paquetesCapturados[i].numero)));
-        ui->tablePaquetes->setItem(fila,1, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].tiempo)));
-        ui->tablePaquetes->setItem(fila,2, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_org)));
-        ui->tablePaquetes->setItem(fila,3, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_dst)));
-        ui->tablePaquetes->setItem(fila,4, new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].protocolo)));
-        ui->tablePaquetes->setItem(fila,5, new QTableWidgetItem(QString::number(paquetesCapturados[i].longitud)));
+
+        QString protoStr = QString::fromStdString(paquetesCapturados[i].protocolo);
+        QColor colorFondo = QColor(255, 255, 255);
+        QColor colorTexto = QColor(0, 0, 0);
+        // Asignacion de colores tipo Wireshark
+        if (protoStr == "TCP") colorFondo = QColor(60, 60, 160);
+        else if (protoStr == "UDP") colorFondo = QColor(0, 150, 150);
+        else if (protoStr == "HTTP") colorFondo = QColor(40, 120, 40);
+        else if (protoStr == "ICMP") colorFondo = QColor(160, 40, 160);
+        else if (protoStr == "ARP") colorFondo = QColor(160, 160, 40);
+        else if (protoStr == "DNS") colorFondo = QColor(180, 100, 40);
+
+        // Obtener el resumen con banderas desde el parser
+        QString infoStr = QString::fromStdString(paquetesCapturados[i].info_resumen);
+
+        QTableWidgetItem* item[6];
+        item[0] = new QTableWidgetItem(QString::number(paquetesCapturados[i].numero));
+        item[1] = new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].tiempo));
+        item[2] = new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_org));
+        item[3] = new QTableWidgetItem(QString::fromStdString(paquetesCapturados[i].ip_dst));
+        item[4] = new QTableWidgetItem(protoStr);
+        item[5] = new QTableWidgetItem(infoStr);
+
+        for(int c = 0; c < 6; c++){
+            item[c]->setBackground(colorFondo);
+            item[c]->setForeground(colorTexto);
+            ui->tablePaquetes->setItem(fila, c, item[c]);
+        }
     }
 
     ultimoPaqueteMostrado = paquetesCapturados.size();

@@ -36,4 +36,5 @@ struct PacketInfo {
 
     // Contenido crudo sin manejar
     vector<uint8_t> bytes;
+    string info_resumen;
 };
