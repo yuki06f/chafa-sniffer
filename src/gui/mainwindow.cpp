@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Poblar lista de interfaces de red al arrancar
     cargarInterfaces();
 
+    // Arranca el sniffer
     connect(ui->interfaces, &QListWidget::itemDoubleClicked,
             this, &MainWindow::iniciarCapturaDesdeLista);
 
@@ -51,6 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->tablePaquetes->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tablePaquetes->setSelectionBehavior(QAbstractItemView::SelectRows);
 
+    //mostrar detalles de un paquete 
     connect(ui->tablePaquetes, &QTableWidget::itemClicked, this, &MainWindow::mostrarDetalles);
 
     // Timer para polling de actualizaciones en la UI
@@ -65,6 +67,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// Extrae las interfaces detectadas de pcap y las muestra en la lista inicial
 void MainWindow::cargarInterfaces()
 {
     ui->interfaces->clear();
@@ -76,12 +79,14 @@ void MainWindow::cargarInterfaces()
     }
 }
 
+//Al seleccionar la tarjeta de red a utilizar
 void MainWindow::iniciarCapturaDesdeLista() {
     QListWidgetItem* item = ui->interfaces->currentItem();
     if(!item) return;
 
     std::string nombreReal = captura->obtenerNombre(item->text().toStdString());
 
+    // Si la interfaz abre, arranca el motor de UI
     if(captura->iniciar(nombreReal)) {
         timer->start(50);
 
@@ -90,16 +95,17 @@ void MainWindow::iniciarCapturaDesdeLista() {
     }
 }
 
+//CONTROL DE FLUJO(PLAY, PAUSA, REINICIO)
 void MainWindow::accion_Iniciar_triggered(){
     if(captura) captura->reanudar();
     if(!timer->isActive()) timer->start(50);
 
-    aplicarFiltro("");
+    aplicarFiltro(""); //quita cualquier filtro activo para ver el flujo real
 }
 
 void MainWindow::accion_Pausar_triggered(){
     if(captura) captura->pausar();
-    if(timer) timer->stop();
+    if(timer) timer->stop(); //congela la tabla visualmente
 }
 
 void MainWindow::accion_Detener_triggered(){
@@ -113,6 +119,7 @@ void MainWindow::accion_Detener_triggered(){
 void MainWindow::accion_Reiniciar_triggered(){
     if(captura)
     {
+        //limpia la memoria gráfica y reinicia el contador 
         ui->tablePaquetes->setRowCount(0);
         ultimoPaqueteMostrado = 0;
         ui->tablePaquetes->clearContents();
@@ -122,6 +129,8 @@ void MainWindow::accion_Reiniciar_triggered(){
         ui->interfaces->setEnabled(true);
     }
 }
+
+//Reestablece la vista de la tabla para mostrar el vector sin aplicar reglas de filtro
 void MainWindow::accion_Limpiar_triggered() {
 
     ui->tablePaquetes->setRowCount(0);
@@ -135,6 +144,8 @@ void MainWindow::accion_Limpiar_triggered() {
 
     qDebug() << "Tabla recargada con todos los paquetes.";
 }
+
+//FILTROS MANUALES 8IP O PUERTO ESPECÍFICO)
 void MainWindow::filtrarIPFuente()
 {
     bool ok;
@@ -252,11 +263,13 @@ void MainWindow::filtrarPuertoDestino()
     }
 }
 
-
+//FILTROS PRINCIPALES
+//filtra la captura identificando el protocolo base
 void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
 {
     if(!captura) return;
 
+    //Detene para evitar conflictos de acceso a memoria
     timer->stop();
     ui->tablePaquetes->setRowCount(0);
 
@@ -280,7 +293,7 @@ void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
             QString protoStr = QString::fromStdString(paquetesCapturados[i].protocolo);
             QColor colorFondo = QColor(255, 255, 255);    // Fondo oscuro
             QColor colorTexto = QColor(0, 0, 0);
-            // Asignacion de colores tipo Wireshark
+            // Asignacion de colores 
             if (protoStr == "TCP") colorFondo = QColor(60, 60, 160);
             else if (protoStr == "UDP") colorFondo = QColor(0, 150, 150);
             else if (protoStr == "HTTP") colorFondo = QColor(40, 120, 40);
@@ -308,12 +321,14 @@ void MainWindow::aplicarFiltro(const QString& protocoloFiltro)
         }
     }
 
+    //Si se aplicó el boton de "Todos", se reanuda la captura 
     if(protocoloFiltro.isEmpty()){
         ultimoPaqueteMostrado = paquetesCapturados.size();
         timer->start(50);
     }
 }
 
+//Llama a QTimer para ir dibujando 
 void MainWindow::actualizarTabla()
 {
     if(!captura) return;
@@ -446,6 +461,9 @@ void MainWindow::mostrarHex(const PacketInfo& pkt)
 
     ui->txtHex->setPlainText(salida);
 }
+
+//Funcion auxiliar para inyectar paquetes en la UI
+//Reutiliza la lógica de colores de aplicarFiltro para lo visual
 void MainWindow::agregarPaqueteATabla(const PacketInfo& pkt)
 {
     int fila = ui->tablePaquetes->rowCount();
@@ -479,8 +497,11 @@ void MainWindow::agregarPaqueteATabla(const PacketInfo& pkt)
         ui->tablePaquetes->setItem(fila, c, item[c]);
     }
 }
+
+//EXPORTAR A EXCEL
 void MainWindow::action_ExportarTodos_triggered() {
     qDebug() << "¡Sí entró al botón de exportar!";
+    //Medida de seguridad: Bloquear exportación si la captura de red está escribiendo en el vector
     if (timer->isActive()) {
         QMessageBox::warning(this, "Captura Activa",
                              "¡Aguanta! Detén la captura de red primero antes de exportar a Excel para no corromper los datos.");
@@ -505,6 +526,8 @@ void MainWindow::action_ExportarTodos_triggered() {
         return;
     }
 
+    //Lee qué paquetes están visibles en la tabla de la UI y 
+    //extrae sus objetos PacketInfo correspondientes para exportar solo lo que el usuario está viendo
     for (int i = 0; i < filasEnTabla; i++) {
         QTableWidgetItem* itemNo = ui->tablePaquetes->item(i, 0);
         if (itemNo) {
